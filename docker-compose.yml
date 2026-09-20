@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: fabri-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: fabri
+      POSTGRES_PASSWORD: fabri
+      POSTGRES_DB: fabri
+    ports:
+      - "5432:5432"
+    volumes:
+      - fabri-data:/var/lib/postgresql/data
+
+volumes:
+  fabri-data:
