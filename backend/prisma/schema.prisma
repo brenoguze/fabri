@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -10,4 +5,188 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+enum CasitaRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum BillType {
+  FIXED
+  RANDOM
+}
+
+enum TaskEventType {
+  COMPLETED
+  REMINDED
+  OVERDUE
+  APPROVED
+  DISAPPROVED
+}
+
+enum DebtEventType {
+  PAID
+  REMINDED
+  OVERDUE
+  COVERED
+  UNPAID
+}
+
+model User {
+  id    String @id @default(uuid())
+  name  String
+  phone String @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships CasitaMember[]
+  tasksCreated       Task[] @relation("TasksCreated")
+  tasksResponsable   Task[] @relation("TasksResponsable")
+  images      Image[]
+  comments    Comment[]
+  debts       Debt[]
+  tasksEvents TaskEvent[]
+  debtsEvents DebtEvent[]
+}
+
+model Casita {
+  id   String @id @default(uuid())
+  name String
+
+  members CasitaMember[]
+
+  tasks Task[]
+
+  bills Bill[]
+
+  createdAt DateTime @default(now())
+}
+
+model CasitaMember {
+  id String @id @default(uuid())
+
+  userId   String
+  casitaId String
+  role     CasitaRole @default(MEMBER)
+
+  user   User   @relation(fields: [userId], references: [id])
+  casita Casita @relation(fields: [casitaId], references: [id])
+
+  @@unique([userId, casitaId])
+}
+
+model Task {
+  id   String @id @default(uuid())
+  name String
+
+  creatorId String
+  responsibleId String
+  casitaId String
+  
+  creator User @relation("TasksCreated", fields: [creatorId], references: [id])
+  responsible User @relation("TasksResponsable", fields: [responsibleId], references: [id])
+
+  casita Casita @relation(fields: [casitaId], references: [id])
+
+  image    Image?
+  comments Comment[]
+  tasksEvents TaskEvent[]
+
+  dueDate   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Image {
+  id String @id @default(uuid())
+
+  taskId    String @unique
+  userId    String
+  task      Task     @relation(fields: [taskId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Comment {
+  id String @id @default(uuid())
+
+  userId String
+  taskId String
+  user   User   @relation(fields: [userId], references: [id])
+  task   Task   @relation(fields: [taskId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+model Bill {
+  id   String @id @default(uuid())
+  name String
+  type BillType
+
+  casitaId  String
+  
+  casita Casita @relation(fields: [casitaId], references: [id])
+
+  billItems BillItem []
+  debts     Debt[]
+
+  dueDate   DateTime
+  referenceMonth DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BillItem {
+  id   String @id @default(uuid())
+  name String
+  value Decimal
+
+  billId String
+  bill   Bill   @relation(fields: [billId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Debt {
+  id   String @id @default(uuid())
+  value Decimal
+
+  userId String
+  billId String
+  user   User   @relation(fields: [userId], references: [id])
+  bill   Bill   @relation(fields: [billId], references: [id])
+
+  debtsEvent  DebtEvent[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TaskEvent {
+  id   String @id @default(uuid())
+  type TaskEventType
+  
+  userId String?
+  taskId String
+
+  user  User? @relation(fields: [userId], references: [id])
+  task  Task @relation(fields: [taskId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model DebtEvent {
+  id   String @id @default(uuid())
+  type DebtEventType
+  value Decimal?
+
+  userId String?
+  debtId String
+
+  user  User? @relation(fields: [userId], references: [id])
+  debt  Debt @relation(fields: [debtId], references: [id])
+  createdAt DateTime @default(now())
 }
