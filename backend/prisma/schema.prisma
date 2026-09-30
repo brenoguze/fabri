@@ -102,6 +102,7 @@ model Task {
 
 model Image {
   id String @id @default(uuid())
+  url String
 
   taskId    String @unique
   userId    String
