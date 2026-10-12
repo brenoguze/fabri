@@ -1,0 +1,19 @@
+info:
+  name: Atualizar com erro
+  type: http
+  seq: 6
+
+http:
+  method: PATCH
+  url: http://localhost:3000/users/ce85b748-55c8-4dbf-94ef-bd2e9289327a
+  body:
+    type: json
+    data: '{ "phone": "123" }'
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
