@@ -1,28 +1,54 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { hash } from 'bcryptjs';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 @Injectable()
 export class UserService {
-
   constructor(private readonly prisma: PrismaService) {}
 
   async create(dto: CreateUserDto) {
     const existingUser = await this.prisma.user.findUnique({
-      where: {phone: dto.phone},
+      where: { phone: dto.phone },
     });
 
-    if(existingUser){
+    if (existingUser) {
       throw new ConflictException('Número de telefone já cadastrado.');
     }
+
+    const password = dto.password.toLowerCase();
+    const nameParts = dto.name
+      .toLowerCase()
+      .trim()
+      .split(/\s+/)
+      .filter((name) => name.length >= 3);
+
+    const phoneDigits = dto.phone.slice(-8);
+
+    const containsName = nameParts.some((name) => password.includes(name));
+    const containsPhone = password.includes(phoneDigits);
+
+    if (containsName || containsPhone) {
+      throw new BadRequestException(
+        'Sua senha não pode conter o seu nome ou o seu número de telefone.',
+      );
+    }
+
+    const hashedPassword = await hash(dto.password, 10);
 
     return this.prisma.user.create({
       data: {
         name: dto.name,
-        phone:dto.phone,
+        phone: dto.phone,
+        password: hashedPassword,
       },
-    })
+    });
   }
 
   async findAll() {
@@ -31,10 +57,10 @@ export class UserService {
 
   async findOne(id: string) {
     const user = await this.prisma.user.findUnique({
-      where: {id},
+      where: { id },
     });
 
-    if(!user){
+    if (!user) {
       throw new NotFoundException(`Usuário com ID ${id} não encontrado.`);
     }
 
@@ -45,7 +71,7 @@ export class UserService {
     await this.findOne(id);
 
     return this.prisma.user.update({
-      where: {id},
+      where: { id },
       data: {
         name: dto.name,
         phone: dto.phone,
@@ -57,7 +83,7 @@ export class UserService {
     await this.findOne(id);
 
     return this.prisma.user.delete({
-      where: {id}
-    })
+      where: { id },
+    });
   }
 }
