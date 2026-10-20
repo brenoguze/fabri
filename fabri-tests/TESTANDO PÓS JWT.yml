@@ -1,0 +1,23 @@
+info:
+  name: TESTANDO PÓS JWT
+  type: http
+  seq: 13
+
+http:
+  method: POST
+  url: POST http://localhost:3000/auth/login
+  body:
+    type: json
+    data: |-
+      {
+        "phone": "+5579991053360",
+        "password": "Fabri@2026"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
