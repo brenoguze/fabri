@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Delete, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard.js';
 import { UserService } from './user.service.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
+import { CurrentUser } from '../auth/current-user.decorator.js';
+import { ChangePasswordDto } from './dto/change-password.dto.js';
 
 @Controller('users')
 export class UserController {
@@ -14,23 +16,26 @@ export class UserController {
   }
 
   @UseGuards(AuthGuard)
-  @Get()
-  findAll() {
-    return this.userService.findAll();
+  @Get('me')
+  findMe(@CurrentUser() userId: string) {
+    return this.userService.findOne(userId);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.userService.findOne(id);
+  @UseGuards(AuthGuard)
+  @Patch('me')
+  update(@CurrentUser() userId: string, @Body() updateUserDto: UpdateUserDto) {
+    return this.userService.update(userId, updateUserDto);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(id, updateUserDto);
+  @UseGuards(AuthGuard)
+  @Patch('me/password')
+  changePassword(@CurrentUser() userId: string, @Body() changePasswordDto: ChangePasswordDto) {
+    return this.userService.changePassword(userId, changePasswordDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userService.remove(id);
+  @UseGuards(AuthGuard)
+  @Delete('me')
+  remove(@CurrentUser() userId: string) {
+    return this.userService.remove(userId);
   }
 }
