@@ -35,22 +35,22 @@ enum DebtEventType {
 }
 
 model User {
-  id    String @id @default(uuid())
-  name  String
-  phone String @unique
+  id       String @id @default(uuid())
+  name     String
+  phone    String @unique
   password String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  memberships CasitaMember[]
-  tasksCreated       Task[] @relation("TasksCreated")
-  tasksResponsable   Task[] @relation("TasksResponsable")
-  images      Image[]
-  comments    Comment[]
-  debts       Debt[]
-  tasksEvents TaskEvent[]
-  debtsEvents DebtEvent[]
+  memberships      CasitaMember[]
+  tasksCreated     Task[]         @relation("TasksCreated")
+  tasksResponsable Task[]         @relation("TasksResponsable")
+  images           Image[]
+  comments         Comment[]
+  debts            Debt[]
+  tasksEvents      TaskEvent[]
+  debtsEvents      DebtEvent[]
 }
 
 model Casita {
@@ -62,6 +62,8 @@ model Casita {
   tasks Task[]
 
   bills Bill[]
+
+  invite Invite?
 
   createdAt DateTime @default(now())
 }
@@ -83,17 +85,17 @@ model Task {
   id   String @id @default(uuid())
   name String
 
-  creatorId String
+  creatorId     String
   responsibleId String
-  casitaId String
-  
-  creator User @relation("TasksCreated", fields: [creatorId], references: [id])
+  casitaId      String
+
+  creator     User @relation("TasksCreated", fields: [creatorId], references: [id])
   responsible User @relation("TasksResponsable", fields: [responsibleId], references: [id])
 
   casita Casita @relation(fields: [casitaId], references: [id])
 
-  image    Image?
-  comments Comment[]
+  image       Image?
+  comments    Comment[]
   tasksEvents TaskEvent[]
 
   dueDate   DateTime
@@ -102,10 +104,10 @@ model Task {
 }
 
 model Image {
-  id String @id @default(uuid())
+  id  String @id @default(uuid())
   url String
 
-  taskId    String @unique
+  taskId    String   @unique
   userId    String
   task      Task     @relation(fields: [taskId], references: [id])
   user      User     @relation(fields: [userId], references: [id])
@@ -124,26 +126,26 @@ model Comment {
 }
 
 model Bill {
-  id   String @id @default(uuid())
+  id   String   @id @default(uuid())
   name String
   type BillType
 
-  casitaId  String
-  
+  casitaId String
+
   casita Casita @relation(fields: [casitaId], references: [id])
 
-  billItems BillItem []
+  billItems BillItem[]
   debts     Debt[]
 
-  dueDate   DateTime
+  dueDate        DateTime
   referenceMonth DateTime
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
 model BillItem {
-  id   String @id @default(uuid())
-  name String
+  id    String  @id @default(uuid())
+  name  String
   value Decimal
 
   billId String
@@ -154,7 +156,7 @@ model BillItem {
 }
 
 model Debt {
-  id   String @id @default(uuid())
+  id    String  @id @default(uuid())
   value Decimal
 
   userId String
@@ -162,33 +164,44 @@ model Debt {
   user   User   @relation(fields: [userId], references: [id])
   bill   Bill   @relation(fields: [billId], references: [id])
 
-  debtsEvent  DebtEvent[]
+  debtsEvent DebtEvent[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model TaskEvent {
-  id   String @id @default(uuid())
+  id   String        @id @default(uuid())
   type TaskEventType
-  
+
   userId String?
   taskId String
 
-  user  User? @relation(fields: [userId], references: [id])
-  task  Task @relation(fields: [taskId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id])
+  task      Task     @relation(fields: [taskId], references: [id])
   createdAt DateTime @default(now())
 }
 
 model DebtEvent {
-  id   String @id @default(uuid())
-  type DebtEventType
+  id    String        @id @default(uuid())
+  type  DebtEventType
   value Decimal?
 
   userId String?
   debtId String
 
-  user  User? @relation(fields: [userId], references: [id])
-  debt  Debt @relation(fields: [debtId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id])
+  debt      Debt     @relation(fields: [debtId], references: [id])
   createdAt DateTime @default(now())
+}
+
+model Invite {
+  id   String @id @default(uuid())
+  code String @unique
+
+  casitaId String @unique
+  casita   Casita @relation(fields: [casitaId], references: [id])
+
+  createdAt DateTime @default(now())
+  expiresAt DateTime
 }
